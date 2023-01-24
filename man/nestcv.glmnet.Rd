@@ -22,6 +22,7 @@ nestcv.glmnet(
   outer_train_predict = FALSE,
   weights = NULL,
   penalty.factor = rep(1, ncol(x)),
+  parallel_mode = c("mclapply", "future"),
   cv.cores = 1,
   finalCV = TRUE,
   na.option = "omit",
