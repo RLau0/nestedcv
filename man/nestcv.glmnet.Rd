@@ -85,13 +85,13 @@ that variable is always included in the model. Default is 1 for all
 variables. See \code{\link[=glmnet]{glmnet()}}}
 
 \item{parallel_mode}{Character value specifying method of parallel
-processing. Current options are 'mclapply', 'parLapply' or 'future' which
-uses \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}. Note that if 'future' is specified
-the user will need to specify a plan, see \code{\link[future:plan]{future::plan()}}.}
+processing. Current options are \code{'mclapply'}, \code{'parLapply'} from the
+\code{parallel} package or \code{'future'} which uses
+\code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}. Note that if \code{'future'} is specified the
+user will need to specify a plan, see \code{\link[future:plan]{future::plan()}}.}
 
 \item{cv.cores}{Number of cores for parallel processing of the outer loops.
-NOTE: this uses \code{parallel::mclapply} on unix/mac and \code{parallel::parLapply}
-on windows.}
+Only used if parallel_mode is set to \code{'mclapply'} or \code{'parLapply'}.}
 
 \item{finalCV}{Logical whether to perform one last round of CV on the whole
 dataset to determine the final model parameters. If set to \code{FALSE}, the

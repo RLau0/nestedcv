@@ -16,7 +16,7 @@
 #' @param model Function of the model to be fitted. If `parallel_mode` is set to
 #'   `'parLapply'` this must be a function and not a character value. For other
 #'   parallelisation modes a character value can be used and results summaries
-#'   print out more cleanly.
+#'   print out more fully using `summary()`.
 #' @param filterFUN Filter function, e.g. [ttest_filter] or [relieff_filter].
 #'   Any function can be provided and is passed `y` and `x`. Must return a
 #'   character vector with names of filtered predictors. Not available if
@@ -37,14 +37,14 @@
 #' @param outer_folds Optional list containing indices of test folds for outer
 #'   CV. If supplied, `n_outer_folds` is ignored.
 #' @param cv.cores Number of cores for parallel processing of the outer loops.
-#'   NOTE: this uses `parallel::mclapply` on unix/mac and `parallel::parLapply`
-#'   on windows.
+#'   Only used if parallel_mode is set to `'mclapply'` or `'parLapply'`.
 #' @param parallel_mode Character value specifying method of parallel
-#'   processing. Current options are `'mclapply'`, `'parLapply'` or `'future'`
-#'   which uses [future.apply::future_lapply()]. Note that if 'future' is
-#'   specified the user will need to specify a plan, see [future::plan()]. Note
-#'   that if `parallel_mode` is set to `'parLapply'`, then the `model` argument
-#'   must be specified as a function and not as a character string.
+#'   processing. Current options are `'mclapply'`, `'parLapply'` from the
+#'   `parallel` package or `'future'` which uses
+#'   [future.apply::future_lapply()]. Note that if `'future'` is specified the
+#'   user will need to specify a plan, see [future::plan()]. Note that if
+#'   `parallel_mode` is set to `'parLapply'`, then the `model` argument must be
+#'   specified as a function and not as a character string.
 #' @param predict_type Only used with binary classification. Calculation of ROC
 #'   AUC requires predicted class probabilities from fitted models. Most model
 #'   functions use syntax of the form `predict(..., type = "prob")`. However,
@@ -539,9 +539,10 @@ summary.outercv <- function(object,
     nfilter <- NULL
     cat("No filter\n")
   }
-  if (hasMethod2(object$final_fit, "print")) {
+  if (hasMethod2(object$final_fit, "print") & is.character(object$call$model)) {
     cat("\nFinal fit:")
     print(object$final_fit)
+    # if `model` is a string this prints nicely, otherwise function code is printed
   }
   cat("\nResult:\n")
   print(object$summary, digits = digits, print.gap = 3L)

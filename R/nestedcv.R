@@ -50,12 +50,12 @@
 #'   that variable is always included in the model. Default is 1 for all
 #'   variables. See [glmnet()]
 #' @param cv.cores Number of cores for parallel processing of the outer loops.
-#'   NOTE: this uses `parallel::mclapply` on unix/mac and `parallel::parLapply`
-#'   on windows.
+#'   Only used if parallel_mode is set to `'mclapply'` or `'parLapply'`.
 #' @param parallel_mode Character value specifying method of parallel
-#'   processing. Current options are 'mclapply', 'parLapply' or 'future' which
-#'   uses [future.apply::future_lapply()]. Note that if 'future' is specified
-#'   the user will need to specify a plan, see [future::plan()].
+#'   processing. Current options are `'mclapply'`, `'parLapply'` from the
+#'   `parallel` package or `'future'` which uses
+#'   [future.apply::future_lapply()]. Note that if `'future'` is specified the
+#'   user will need to specify a plan, see [future::plan()].
 #' @param finalCV Logical whether to perform one last round of CV on the whole
 #'   dataset to determine the final model parameters. If set to `FALSE`, the
 #'   median of hyperparameters from outer CV folds are used for the final model.

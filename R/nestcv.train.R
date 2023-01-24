@@ -46,12 +46,12 @@
 #' @param outer_train_predict Logical whether to save predictions on outer
 #'   training folds to calculate performance on outer training folds.
 #' @param cv.cores Number of cores for parallel processing of the outer loops.
-#'   NOTE: this uses `parallel::mclapply` on unix/mac and `parallel::parLapply`
-#'   on windows.
+#'   Only used if parallel_mode is set to `'mclapply'` or `'parLapply'`.
 #' @param parallel_mode Character value specifying method of parallel
-#'   processing. Current options are 'mclapply', 'parLapply' or 'future' which
-#'   uses [future.apply::future_lapply()]. Note that if 'future' is specified
-#'   the user will need to specify a plan, see [future::plan()].
+#'   processing. Current options are `'mclapply'`, `'parLapply'` from the
+#'   `parallel` package or `'future'` which uses
+#'   [future.apply::future_lapply()]. Note that if `'future'` is specified the
+#'   user will need to specify a plan, see [future::plan()].
 #' @param finalCV Logical whether to perform one last round of CV on the whole
 #'   dataset to determine the final model parameters. If set to `FALSE`, the
 #'   median of the best hyperparameters from outer CV folds for continuous/
@@ -94,9 +94,12 @@
 #' Parallelisation of the final fit when `finalCV = TRUE` is performed in
 #' `caret` using `registerDoParallel`. `caret` itself uses `foreach`.
 #' 
-#' Parallelisation is performed on the outer CV folds using `parallel::mclapply`
-#' on unix/mac and `parallel::parLapply` on windows.
-#'   
+#' Parallelisation can be performed on the outer CV folds using
+#' `parallel::mclapply` on unix/mac and `parallel::parLapply` on windows by
+#' setting the argument `parallel_mode`. A 3rd option using `future_lapply()`
+#' from the `future.apply` package can be employed, but users must first invoke
+#' [future::plan()].
+#'
 #' If the outer folds are run using parallelisation, then parallelisation in
 #' caret must be off, otherwise an error will be generated. Alternatively if you
 #' wish to use parallelisation in caret, then parallelisation in `nestcv.train`
