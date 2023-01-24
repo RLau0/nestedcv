@@ -21,6 +21,7 @@ outercv(y, ...)
   n_outer_folds = 10,
   outer_folds = NULL,
   cv.cores = 1,
+  parallel_mode = c("mclapply", "parLapply", "future"),
   predict_type = "prob",
   outer_train_predict = FALSE,
   na.option = "pass",
@@ -49,7 +50,10 @@ outercv(y, ...)
 
 \item{x}{Matrix or dataframe of predictors}
 
-\item{model}{Character value or function of the model to be fitted.}
+\item{model}{Function of the model to be fitted. If \code{parallel_mode} is set to
+\code{'parLapply'} this must be a function and not a character value. For other
+parallelisation modes a character value can be used and results summaries
+print out more cleanly.}
 
 \item{filterFUN}{Filter function, e.g. \link{ttest_filter} or \link{relieff_filter}.
 Any function can be provided and is passed \code{y} and \code{x}. Must return a
@@ -81,6 +85,13 @@ CV. If supplied, \code{n_outer_folds} is ignored.}
 \item{cv.cores}{Number of cores for parallel processing of the outer loops.
 NOTE: this uses \code{parallel::mclapply} on unix/mac and \code{parallel::parLapply}
 on windows.}
+
+\item{parallel_mode}{Character value specifying method of parallel
+processing. Current options are \code{'mclapply'}, \code{'parLapply'} or \code{'future'}
+which uses \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}. Note that if 'future' is
+specified the user will need to specify a plan, see \code{\link[future:plan]{future::plan()}}. Note
+that if \code{parallel_mode} is set to \code{'parLapply'}, then the \code{model} argument
+must be specified as a function and not as a character string.}
 
 \item{predict_type}{Only used with binary classification. Calculation of ROC
 AUC requires predicted class probabilities from fitted models. Most model

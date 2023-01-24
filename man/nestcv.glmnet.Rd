@@ -70,7 +70,7 @@ CV. If supplied, \code{n_outer_folds} is ignored.}
 
 \item{keep}{Logical indicating whether inner CV predictions are retained for
 calculating left-out inner CV fold accuracy etc. See argument \code{keep} in
-\link{cv.glmnet}.}
+\code{\link[=cv.glmnet]{cv.glmnet()}}.}
 
 \item{outer_train_predict}{Logical whether to save predictions on outer
 training folds to calculate performance on outer training folds.}
@@ -82,7 +82,7 @@ in filters.}
 \item{penalty.factor}{Separate penalty factors can be applied to each
 coefficient. Can be 0 for some variables, which implies no shrinkage, and
 that variable is always included in the model. Default is 1 for all
-variables. See \link{glmnet}}
+variables. See \code{\link[=glmnet]{glmnet()}}}
 
 \item{parallel_mode}{Character value specifying method of parallel
 processing. Current options are 'mclapply', 'parLapply' or 'future' which
@@ -106,7 +106,7 @@ removes cases if there are \code{NA} in 'y', but columns (predictors) containing
 \code{NA} are removed from 'x' to preserve cases. Any other value means that
 \code{NA} are ignored (a message is given).}
 
-\item{...}{Optional arguments passed to \link{cv.glmnet}}
+\item{...}{Optional arguments passed to \code{\link[=cv.glmnet]{cv.glmnet()}}}
 }
 \value{
 An object with S3 class "nestcv.glmnet"

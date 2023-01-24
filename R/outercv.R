@@ -13,7 +13,10 @@
 #' @param x Matrix or dataframe of predictors
 #' @param formula A formula describing the model to be fitted
 #' @param data A matrix or data frame containing variables in the model.
-#' @param model Character value or function of the model to be fitted.
+#' @param model Function of the model to be fitted. If `parallel_mode` is set to
+#'   `'parLapply'` this must be a function and not a character value. For other
+#'   parallelisation modes a character value can be used and results summaries
+#'   print out more cleanly.
 #' @param filterFUN Filter function, e.g. [ttest_filter] or [relieff_filter].
 #'   Any function can be provided and is passed `y` and `x`. Must return a
 #'   character vector with names of filtered predictors. Not available if
@@ -36,6 +39,12 @@
 #' @param cv.cores Number of cores for parallel processing of the outer loops.
 #'   NOTE: this uses `parallel::mclapply` on unix/mac and `parallel::parLapply`
 #'   on windows.
+#' @param parallel_mode Character value specifying method of parallel
+#'   processing. Current options are `'mclapply'`, `'parLapply'` or `'future'`
+#'   which uses [future.apply::future_lapply()]. Note that if 'future' is
+#'   specified the user will need to specify a plan, see [future::plan()]. Note
+#'   that if `parallel_mode` is set to `'parLapply'`, then the `model` argument
+#'   must be specified as a function and not as a character string.
 #' @param predict_type Only used with binary classification. Calculation of ROC
 #'   AUC requires predicted class probabilities from fitted models. Most model
 #'   functions use syntax of the form `predict(..., type = "prob")`. However,
@@ -175,6 +184,7 @@ outercv.default <- function(y, x,
                             n_outer_folds = 10,
                             outer_folds = NULL,
                             cv.cores = 1,
+                            parallel_mode = c("mclapply", "parLapply", "future"),
                             predict_type = "prob",
                             outer_train_predict = FALSE,
                             na.option = "pass",
@@ -197,6 +207,7 @@ outercv.default <- function(y, x,
     warning("'weights' argument not found in model function")
   }
   outer_method <- match.arg(outer_method)
+  parallel_mode <- match.arg(parallel_mode)
   if (is.null(outer_folds)) {
     outer_folds <- switch(outer_method,
                           cv = createFolds(y, k = n_outer_folds),
@@ -206,7 +217,8 @@ outercv.default <- function(y, x,
   if (outercv.call$model == "mda") predict_type <- "posterior"
   
   dots <- list(...)
-  if (Sys.info()["sysname"] == "Windows" & cv.cores >= 2) {
+  if (parallel_mode == "parLapply" & cv.cores >= 2) {
+    # NB. model must be a function, not a string
     cl <- makeCluster(cv.cores)
     clusterExport(cl, varlist = c("outer_folds", "y", "x", "model", "reg",
                                   "filterFUN", "filter_options",
@@ -224,13 +236,20 @@ outercv.default <- function(y, x,
                      outer_train_predict=outer_train_predict), dots)
       do.call(outercvCore, args)
     })
+  } else if (parallel_mode == "future") {
+    outer_res <- future_lapply(outer_folds, function(test) {
+      outercvCore(test, y, x, model, reg,
+                  filterFUN, filter_options, weights,
+                  balance, balance_options, predict_type,
+                  outer_train_predict, ...)
+    }, future.seed = TRUE)
   } else {
     outer_res <- mclapply(outer_folds, function(test) {
       outercvCore(test, y, x, model, reg,
                   filterFUN, filter_options, weights,
                   balance, balance_options, predict_type,
                   outer_train_predict, ...)
-    }, mc.cores = cv.cores)
+    }, mc.cores = cv.cores, mc.silent = TRUE)
   }
   if (returnList) return(outer_res)
   predslist <- lapply(outer_res, '[[', 'preds')
