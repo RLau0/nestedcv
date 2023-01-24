@@ -37,6 +37,7 @@ outercv(y, ...)
   n_outer_folds = 10,
   outer_folds = NULL,
   cv.cores = 1,
+  parallel_mode = c("mclapply", "parLapply", "future"),
   predict_type = "prob",
   outer_train_predict = FALSE,
   ...,
@@ -148,32 +149,38 @@ needed to tune model hyperparameters (see \link{nestcv.train}).
 \details{
 Some predictive model functions do not have an x & y interface. If the
 function specified by \code{model} requires a formula, \code{x} & \code{y} will be merged
-into a dataframe with \code{model()} called with a formula equivalent to
-\code{y ~ .}.
+into a dataframe with \code{model()} called with a formula equivalent to \code{y ~ .}.
 
-The S3 formula method for \code{outercv} is not really recommended with large
-data sets - it is envisaged to be primarily used to compare
-performance of more basic models e.g. \code{lm()} specified by formulae for
-example incorporating interactions. NOTE: filtering is not available if
-\code{outercv} is called with a formula - use the \code{x-y} interface instead.
+The S3 formula method for \code{outercv} is not really recommended with large data
+sets - it is envisaged to be primarily used to compare performance of more
+basic models e.g. \code{lm()} specified by formulae for example incorporating
+interactions. NOTE: filtering is not available if \code{outercv} is called with a
+formula - use the \code{x-y} interface instead.
 
-An alternative method of tuning a single model with fixed parameters
-is to use \link{nestcv.train} with \code{tuneGrid} set as a single row of a
-data.frame. The parameters which are needed for a specific model can be
-identified using \code{\link[caret:modelLookup]{caret::modelLookup()}}.
+An alternative method of tuning a single model with fixed parameters is to
+use \link{nestcv.train} with \code{tuneGrid} set as a single row of a data.frame. The
+parameters which are needed for a specific model can be identified using
+\code{\link[caret:modelLookup]{caret::modelLookup()}}.
 
 Case weights can be passed to model function which accept these, however
 \code{outercv} assumes that these are passed to the model via an argument named
 \code{weights}.
 
 Note that in the case of \code{model = "lm"}, although additional arguments e.g.
-\code{subset}, \code{weights}, \code{offset} are passed into the model function via
-\code{"..."} the scoping is known to go awry. Avoid using these arguments with
-\code{model = "lm"}.
+\code{subset}, \code{weights}, \code{offset} are passed into the model function via \code{"..."}
+the scoping is known to go awry. Avoid using these arguments with \code{model = "lm"}.
 
 \code{NA} handling differs between the default S3 method and the formula S3
 method. The \code{na.option} argument takes a character string, while the more
 typical \code{na.action} argument takes a function.
+
+Parallelisation can be performed on the outer CV folds using \code{mclapply} (the
+default on all systems except windows) and \code{parLapply} (the default on
+windows) by setting the argument \code{parallel_mode}. A 3rd option using
+\code{future_lapply()} from the \code{future.apply} package can be employed, but users
+need to first invoke \code{\link[future:plan]{future::plan()}}. If \code{parallel_mode} is set to
+\code{"parLapply"}, \code{model} must be passed in as a function and not as a character
+string.
 }
 \examples{
 

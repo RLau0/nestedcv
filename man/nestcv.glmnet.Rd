@@ -147,6 +147,12 @@ nested CV.
 \details{
 glmnet does not tolerate missing values, so \code{na.option = "omit"} is the
 default.
+
+Parallelisation can be performed on the outer CV folds using \code{mclapply} (the
+default on all systems except windows) and \code{parLapply} (the default on
+windows) by setting the argument \code{parallel_mode}. A 3rd option using
+\code{future_lapply()} from the \code{future.apply} package can be employed, but users
+need to first invoke \code{\link[future:plan]{future::plan()}}.
 }
 \examples{
 

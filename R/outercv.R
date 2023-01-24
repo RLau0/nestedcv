@@ -81,34 +81,41 @@
 #'   for classification. ROC AUC for binary classification. RMSE for
 #'   regression.}
 #' @details 
-#'   Some predictive model functions do not have an x & y interface. If the
-#'   function specified by `model` requires a formula, `x` & `y` will be merged
-#'   into a dataframe with `model()` called with a formula equivalent to 
-#'   `y ~ .`.
-#'   
-#'   The S3 formula method for `outercv` is not really recommended with large
-#'   data sets - it is envisaged to be primarily used to compare
-#'   performance of more basic models e.g. `lm()` specified by formulae for
-#'   example incorporating interactions. NOTE: filtering is not available if
-#'   `outercv` is called with a formula - use the `x-y` interface instead.
-#'   
-#'   An alternative method of tuning a single model with fixed parameters
-#'   is to use [nestcv.train] with `tuneGrid` set as a single row of a
-#'   data.frame. The parameters which are needed for a specific model can be
-#'   identified using [caret::modelLookup()].
-#'   
-#'   Case weights can be passed to model function which accept these, however
-#'   `outercv` assumes that these are passed to the model via an argument named
-#'   `weights`.
+#' Some predictive model functions do not have an x & y interface. If the
+#' function specified by `model` requires a formula, `x` & `y` will be merged
+#' into a dataframe with `model()` called with a formula equivalent to `y ~ .`.
 #'
-#'   Note that in the case of `model = "lm"`, although additional arguments e.g.
-#'   `subset`, `weights`, `offset` are passed into the model function via
-#'   `"..."` the scoping is known to go awry. Avoid using these arguments with
-#'   `model = "lm"`.
-#'   
-#'   `NA` handling differs between the default S3 method and the formula S3
-#'   method. The `na.option` argument takes a character string, while the more
-#'   typical `na.action` argument takes a function.
+#' The S3 formula method for `outercv` is not really recommended with large data
+#' sets - it is envisaged to be primarily used to compare performance of more
+#' basic models e.g. `lm()` specified by formulae for example incorporating
+#' interactions. NOTE: filtering is not available if `outercv` is called with a
+#' formula - use the `x-y` interface instead.
+#'
+#' An alternative method of tuning a single model with fixed parameters is to
+#' use [nestcv.train] with `tuneGrid` set as a single row of a data.frame. The
+#' parameters which are needed for a specific model can be identified using
+#' [caret::modelLookup()].
+#'
+#' Case weights can be passed to model function which accept these, however
+#' `outercv` assumes that these are passed to the model via an argument named
+#' `weights`.
+#'
+#' Note that in the case of `model = "lm"`, although additional arguments e.g.
+#' `subset`, `weights`, `offset` are passed into the model function via `"..."`
+#' the scoping is known to go awry. Avoid using these arguments with `model =
+#' "lm"`.
+#'
+#' `NA` handling differs between the default S3 method and the formula S3
+#' method. The `na.option` argument takes a character string, while the more
+#' typical `na.action` argument takes a function.
+#'
+#' Parallelisation can be performed on the outer CV folds using `mclapply` (the
+#' default on all systems except windows) and `parLapply` (the default on
+#' windows) by setting the argument `parallel_mode`. A 3rd option using
+#' `future_lapply()` from the `future.apply` package can be employed, but users
+#' need to first invoke [future::plan()]. If `parallel_mode` is set to
+#' `"parLapply"`, `model` must be passed in as a function and not as a character
+#' string.
 #'   
 #' @importFrom caret createFolds confusionMatrix defaultSummary
 #' @importFrom data.table rbindlist
@@ -217,8 +224,11 @@ outercv.default <- function(y, x,
   if (outercv.call$model == "mda") predict_type <- "posterior"
   
   dots <- list(...)
+  if (Sys.info()["sysname"] == "Windows" & parallel_mode == "mclapply") {
+    parallel_mode <- "parLapply"
+  }
   if (parallel_mode == "parLapply" & cv.cores >= 2) {
-    # NB. model must be a function, not a string
+    # NB. model must be a function here, not a string
     cl <- makeCluster(cv.cores)
     clusterExport(cl, varlist = c("outer_folds", "y", "x", "model", "reg",
                                   "filterFUN", "filter_options",
@@ -384,6 +394,7 @@ outercv.formula <- function(formula, data,
                             n_outer_folds = 10,
                             outer_folds = NULL,
                             cv.cores = 1,
+                            parallel_mode = c("mclapply", "parLapply", "future"),
                             predict_type = "prob",
                             outer_train_predict = FALSE,
                             ..., na.action = na.fail) {
@@ -414,6 +425,7 @@ outercv.formula <- function(formula, data,
   }
   # for models designed for formula method
   outer_method <- match.arg(outer_method)
+  parallel_mode <- match.arg(parallel_mode)
   y <- data[, all.vars(formula[[2]])]
   reg <- !(is.factor(y) | is.character(y))  # y = regression
   if (is.null(outer_folds)) {
@@ -422,9 +434,14 @@ outercv.formula <- function(formula, data,
                           LOOCV = 1:length(y))
   }
   if (outercv.call$model == "glm") predict_type <- "response"
+  if (outercv.call$model == "mda") predict_type <- "posterior"
   
   dots <- list(...)
-  if (Sys.info()["sysname"] == "Windows" & cv.cores >= 2) {
+  
+  if (Sys.info()["sysname"] == "Windows" & parallel_mode == "mclapply") {
+    parallel_mode <- "parLapply"
+  }
+  if (parallel_mode == "parLapply" & cv.cores >= 2) {
     cl <- makeCluster(cv.cores)
     clusterExport(cl, varlist = c("outer_folds", "formula", "data", "y", 
                                   "model", "reg", "predict_type",
@@ -437,6 +454,11 @@ outercv.formula <- function(formula, data,
                      reg=reg, predict_type=predict_type), dots)
       do.call(outercvFormulaCore, args)
     })
+  } else if (parallel_mode == "future") {
+    outer_res <- future_lapply(outer_folds, function(test) {
+      outercvFormulaCore(test, formula, data, y, model,
+                         reg, predict_type, outer_train_predict, ...)
+    }, future.seed = TRUE)
   } else {
     outer_res <- mclapply(outer_folds, function(test) {
       outercvFormulaCore(test, formula, data, y, model,

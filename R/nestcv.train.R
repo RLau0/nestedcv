@@ -94,11 +94,11 @@
 #' Parallelisation of the final fit when `finalCV = TRUE` is performed in
 #' `caret` using `registerDoParallel`. `caret` itself uses `foreach`.
 #' 
-#' Parallelisation can be performed on the outer CV folds using
-#' `parallel::mclapply` on unix/mac and `parallel::parLapply` on windows by
-#' setting the argument `parallel_mode`. A 3rd option using `future_lapply()`
-#' from the `future.apply` package can be employed, but users must first invoke
-#' [future::plan()].
+#' Parallelisation can be performed on the outer CV folds using `mclapply` (the
+#' default on all systems except windows) and `parLapply` (the default on
+#' windows) by setting the argument `parallel_mode`. A 3rd option using
+#' `future_lapply()` from the `future.apply` package can be employed, but users
+#' need to first invoke [future::plan()].
 #'
 #' If the outer folds are run using parallelisation, then parallelisation in
 #' caret must be off, otherwise an error will be generated. Alternatively if you
@@ -258,6 +258,9 @@ nestcv.train <- function(y, x,
     }
   }
   
+  if (Sys.info()["sysname"] == "Windows" & parallel_mode == "mclapply") {
+    parallel_mode <- "parLapply"
+  }
   if (parallel_mode == "parLapply" & cv.cores >= 2) {
     cl <- makeCluster(cv.cores)
     dots <- list(...)

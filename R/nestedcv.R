@@ -97,6 +97,13 @@
 #' @details
 #' glmnet does not tolerate missing values, so `na.option = "omit"` is the
 #' default.
+#' 
+#' Parallelisation can be performed on the outer CV folds using `mclapply` (the
+#' default on all systems except windows) and `parLapply` (the default on
+#' windows) by setting the argument `parallel_mode`. A 3rd option using
+#' `future_lapply()` from the `future.apply` package can be employed, but users
+#' need to first invoke [future::plan()].
+#' 
 #' @author Myles Lewis
 #' @importFrom caret createFolds confusionMatrix defaultSummary
 #' @importFrom data.table rbindlist
@@ -199,6 +206,9 @@ nestcv.glmnet <- function(y, x,
                           LOOCV = 1:length(y))
   }
   
+  if (Sys.info()["sysname"] == "Windows" & parallel_mode == "mclapply") {
+    parallel_mode <- "parLapply"
+  }
   if (parallel_mode == "parLapply" & cv.cores >= 2) {
     cl <- makeCluster(cv.cores)
     dots <- list(...)
