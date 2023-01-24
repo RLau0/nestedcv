@@ -39,7 +39,7 @@
 #'   0=lambda.min to 1=lambda.1se
 #' @param keep Logical indicating whether inner CV predictions are retained for
 #'   calculating left-out inner CV fold accuracy etc. See argument `keep` in
-#'   [cv.glmnet].
+#'   [cv.glmnet()].
 #' @param outer_train_predict Logical whether to save predictions on outer
 #'   training folds to calculate performance on outer training folds.
 #' @param weights Weights applied to each sample. Note `weights` and `balance`
@@ -48,10 +48,14 @@
 #' @param penalty.factor Separate penalty factors can be applied to each
 #'   coefficient. Can be 0 for some variables, which implies no shrinkage, and
 #'   that variable is always included in the model. Default is 1 for all
-#'   variables. See [glmnet]
+#'   variables. See [glmnet()]
 #' @param cv.cores Number of cores for parallel processing of the outer loops.
 #'   NOTE: this uses `parallel::mclapply` on unix/mac and `parallel::parLapply`
 #'   on windows.
+#' @param parallel_mode Character value specifying method of parallel
+#'   processing. Current options are 'mclapply', 'parLapply' or 'future' which
+#'   uses [future.apply::future_lapply()]. Note that if 'future' is specified
+#'   the user will need to specify a plan, see [future::plan()].
 #' @param finalCV Logical whether to perform one last round of CV on the whole
 #'   dataset to determine the final model parameters. If set to `FALSE`, the
 #'   median of hyperparameters from outer CV folds are used for the final model.
@@ -63,7 +67,7 @@
 #'   removes cases if there are `NA` in 'y', but columns (predictors) containing
 #'   `NA` are removed from 'x' to preserve cases. Any other value means that
 #'   `NA` are ignored (a message is given).
-#' @param ... Optional arguments passed to [cv.glmnet]
+#' @param ... Optional arguments passed to [cv.glmnet()]
 #' @return An object with S3 class "nestcv.glmnet"
 #'   \item{call}{the matched call}
 #'   \item{output}{Predictions on the left-out outer folds}

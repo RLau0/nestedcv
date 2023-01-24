@@ -17,6 +17,7 @@ nestcv.train(
   n_outer_folds = 10,
   outer_folds = NULL,
   cv.cores = 1,
+  parallel_mode = c("mclapply", "parLapply", "future"),
   metric = ifelse(is.factor(y), "logLoss", "RMSE"),
   trControl = NULL,
   tuneGrid = NULL,
@@ -64,6 +65,11 @@ CV. If supplied, \code{n_outer_folds} is ignored.}
 \item{cv.cores}{Number of cores for parallel processing of the outer loops.
 NOTE: this uses \code{parallel::mclapply} on unix/mac and \code{parallel::parLapply}
 on windows.}
+
+\item{parallel_mode}{Character value specifying method of parallel
+processing. Current options are 'mclapply', 'parLapply' or 'future' which
+uses \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}. Note that if 'future' is specified
+the user will need to specify a plan, see \code{\link[future:plan]{future::plan()}}.}
 
 \item{metric}{A string that specifies what summary metric will be used to
 select the optimal model. By default, "logLoss" is used for classification

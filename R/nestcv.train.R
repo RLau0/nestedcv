@@ -48,6 +48,10 @@
 #' @param cv.cores Number of cores for parallel processing of the outer loops.
 #'   NOTE: this uses `parallel::mclapply` on unix/mac and `parallel::parLapply`
 #'   on windows.
+#' @param parallel_mode Character value specifying method of parallel
+#'   processing. Current options are 'mclapply', 'parLapply' or 'future' which
+#'   uses [future.apply::future_lapply()]. Note that if 'future' is specified
+#'   the user will need to specify a plan, see [future::plan()].
 #' @param finalCV Logical whether to perform one last round of CV on the whole
 #'   dataset to determine the final model parameters. If set to `FALSE`, the
 #'   median of the best hyperparameters from outer CV folds for continuous/
@@ -160,6 +164,7 @@
 #' @importFrom parallel mclapply
 #' @importFrom pROC roc
 #' @importFrom stats predict setNames
+#' @importFrom utils capture.output
 #' @export
 #' 
 nestcv.train <- function(y, x,

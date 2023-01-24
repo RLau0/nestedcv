@@ -22,7 +22,7 @@ nestcv.glmnet(
   outer_train_predict = FALSE,
   weights = NULL,
   penalty.factor = rep(1, ncol(x)),
-  parallel_mode = c("mclapply", "future"),
+  parallel_mode = c("mclapply", "parLapply", "future"),
   cv.cores = 1,
   finalCV = TRUE,
   na.option = "omit",
@@ -83,6 +83,11 @@ in filters.}
 coefficient. Can be 0 for some variables, which implies no shrinkage, and
 that variable is always included in the model. Default is 1 for all
 variables. See \link{glmnet}}
+
+\item{parallel_mode}{Character value specifying method of parallel
+processing. Current options are 'mclapply', 'parLapply' or 'future' which
+uses \code{\link[future.apply:future_lapply]{future.apply::future_lapply()}}. Note that if 'future' is specified
+the user will need to specify a plan, see \code{\link[future:plan]{future::plan()}}.}
 
 \item{cv.cores}{Number of cores for parallel processing of the outer loops.
 NOTE: this uses \code{parallel::mclapply} on unix/mac and \code{parallel::parLapply}
