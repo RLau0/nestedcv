@@ -201,7 +201,7 @@ nestcv.glmnet <- function(y, x,
                         balance, balance_options,
                         alphaSet, min_1se, n_inner_folds, keep, family,
                         weights, penalty.factor, outer_train_predict, ...)
-    })
+    }, future.seed = TRUE)
   } else {
     outer_res <- mclapply(outer_folds, function(test) {
       nestcv.glmnetCore(test, y, x, filterFUN, filter_options,
