@@ -173,7 +173,7 @@ nestcv.train <- function(y, x,
                          n_outer_folds = 10,
                          outer_folds = NULL,
                          cv.cores = 1,
-                         parallel_mode = c("mclapply", "future"),
+                         parallel_mode = c("mclapply", "parLapply", "future"),
                          metric = ifelse(is.factor(y), "logLoss", "RMSE"),
                          trControl = NULL,
                          tuneGrid = NULL,
@@ -248,7 +248,25 @@ nestcv.train <- function(y, x,
     }
   }
   
-  if (parallel_mode == "future") {
+  if (parallel_mode == "parLapply" & cv.cores >= 2) {
+    cl <- makeCluster(cv.cores)
+    dots <- list(...)
+    varlist <- c("outer_folds", "y", "x", "method", "filterFUN",
+                 "filter_options", "weights", "balance", "balance_options",
+                 "metric", "trControl", "tuneGrid", "outer_train_predict",
+                 "nestcv.trainCore", "dots")
+    clusterExport(cl, varlist = varlist, envir = environment())
+    outer_res <- parLapply(cl = cl, outer_folds, function(test) {
+      args <- c(list(test=test, y=y, x=x, method=method,
+                     filterFUN=filterFUN, filter_options=filter_options,
+                     weights=weights, balance=balance,
+                     balance_options=balance_options, metric=metric,
+                     trControl=trControl, tuneGrid=tuneGrid,
+                     outer_train_predict=outer_train_predict), dots)
+      do.call(nestcv.trainCore, args)
+    })
+    stopCluster(cl)
+  } else if (parallel_mode == "future") {
     outer_res <- future_lapply(outer_folds, function(test) {
       nestcv.trainCore(test, y, x, method,
                        filterFUN, filter_options,

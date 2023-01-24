@@ -168,7 +168,7 @@ nestcv.glmnet <- function(y, x,
                           outer_train_predict = FALSE,
                           weights = NULL,
                           penalty.factor = rep(1, ncol(x)),
-                          parallel_mode = c("mclapply", "future"),
+                          parallel_mode = c("mclapply", "parLapply", "future"),
                           cv.cores = 1,
                           finalCV = TRUE,
                           na.option = "omit",
@@ -195,7 +195,26 @@ nestcv.glmnet <- function(y, x,
                           LOOCV = 1:length(y))
   }
   
-  if (parallel_mode == "future") {
+  if (parallel_mode == "parLapply" & cv.cores >= 2) {
+    cl <- makeCluster(cv.cores)
+    dots <- list(...)
+    varlist = c("outer_folds", "y", "x", "filterFUN", "filter_options",
+                "alphaSet", "min_1se",  "n_inner_folds", "keep", "family",
+                "weights", "balance", "balance_options", "penalty.factor",
+                "outer_train_predict", "nestcv.glmnetCore", "dots")
+    clusterExport(cl, varlist = varlist, envir = environment())
+    on.exit(stopCluster(cl))
+    outer_res <- parLapply(cl = cl, outer_folds, function(test) {
+      args <- c(list(test=test, y=y, x=x, filterFUN=filterFUN,
+                     filter_options=filter_options,
+                     balance=balance, balance_options=balance_options,
+                     alphaSet=alphaSet, min_1se=min_1se,
+                     n_inner_folds=n_inner_folds, keep=keep, family=family,
+                     weights=weights, penalty.factor=penalty.factor,
+                     outer_train_predict=outer_train_predict), dots)
+      do.call(nestcv.glmnetCore, args)
+    })
+  } else if (parallel_mode == "future") {
     outer_res <- future_lapply(outer_folds, function(test) {
       nestcv.glmnetCore(test, y, x, filterFUN, filter_options,
                         balance, balance_options,
