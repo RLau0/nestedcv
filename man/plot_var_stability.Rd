@@ -42,6 +42,13 @@ models trained and tested across outer CV folds. Overlays frequency with
 which variables are selected across the outer folds and optionally overlays
 directionality for binary response outcome.
 }
+\details{
+When plotting variable stability for models trained using \code{caret} via
+\code{\link[=nestcv.train]{nestcv.train()}}, additional packages may need to be loaded. Some
+\code{\link[=nestcv.train]{nestcv.train()}} fitted objects give an error message due to the package
+(e.g. \code{gbm}) for the model not being loaded when \code{\link[caret:varImp]{caret::varImp()}} is called
+to obtain the variable importance from the fitted models.
+}
 \seealso{
 \code{\link[=var_stability]{var_stability()}}
 }

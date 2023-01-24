@@ -152,6 +152,12 @@ var_stability.nestcv.train <- function(x, ...) {
 #' @param breaks Vector of continuous breaks for legend colour/size
 #' @return A ggplot2 plot
 #' @seealso [var_stability()]
+#' @details
+#' When plotting variable stability for models trained using `caret` via
+#' [nestcv.train()], additional packages may need to be loaded. Some
+#' [nestcv.train()] fitted objects give an error message due to the package
+#' (e.g. `gbm`) for the model not being loaded when [caret::varImp()] is called
+#' to obtain the variable importance from the fitted models.
 #' @importFrom ggplot2 geom_vline geom_errorbarh scale_fill_distiller
 #'   scale_fill_manual scale_radius
 #' @export
